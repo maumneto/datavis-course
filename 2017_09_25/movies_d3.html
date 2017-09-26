@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Trabalho da Aula 25/09/2017</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+<body>
+
+<big>
+    <h1>Trabalho da Aula 25/07/2017</b> <h1>
+</big>
+
+<h2>Parte 1</h2>
+<div id="chart"></div>
+<h2>Parte 2</h2>
+<div id="chart1"></div>
+<h2>Parte 3</h2>
+<div id="chart2"></div>
+<h2>Parte 4</h2>
+<div id="chart3"></div>
+
+
+<script type="text/javascript">
+    let colorScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range(["#00BFFF", "#FF0000"]); // Escala de cor
+
+    //QUESTAO 1
+    function render1(movies, comparator) {
+        d3.select("#chart").selectAll("div#chart.h-bar")
+                .data(movies)
+            .enter().append("div")
+            .attr("id", "chart")
+            .attr("class", "h-bar")
+            .append("span");
+        
+        d3.select("#chart").selectAll("div#chart.h-bar")
+                .data(movies)
+            .attr("class", "h-bar")
+            .style("width", function (d) {
+                return d.Worldwide_Gross_M + "px";
+            })
+            .select("span")
+                .text(function (d) {
+                    return d.Film;
+                });
+         if(comparator)
+            d3.select("body")
+                .selectAll("div#chart.h-bar") 
+                .sort(comparator);
+    }
+
+    var comparePorBilheteria = function (a, b) { 
+        return a.Worldwide_Gross_M > b.Worldwide_Gross_M?-1:1;
+    };
+
+    // QUESTAO 2
+    function render2(movies, comparator) {
+        d3.select("#chart1").selectAll("div#chart1.h-bar")
+                .data(movies)
+            .enter().append("div")
+            .attr("id", "chart1")
+            .attr("class", "h-bar")
+            .append("span");
+        
+        d3.select("#chart1").selectAll("div#chart1.h-bar")
+                .data(movies)
+            .attr("class", "h-bar")
+            .style("width", function (d) {
+                return (d.Budget_M*3) + "px";
+            })
+            .select("span")
+                .text(function (d) {
+                    return d.Film;
+                });
+         if(comparator)
+            d3.select("body")
+                .selectAll("div#chart1.h-bar") 
+                .sort(comparator);
+    }
+
+    var comparePorBudGet = function (a, b) { 
+        return a.Budget_M > b.Budget_M?-1:1;
+    };
+
+
+    // QUESTAO 3
+    function getLucro(movie){
+        return movie.Worldwide_Gross_M-movie.Budget_M;
+    }
+
+    function render3(movies, comparator) {
+        d3.select("#chart2").selectAll("div#chart2.h-bar")
+                .data(movies)
+            .enter().append("div")
+            .attr("id", "chart2")
+            .attr("class", "h-bar")
+            .append("span");
+        
+        d3.select("#chart2").selectAll("div#chart2.h-bar")
+                .data(movies)
+            .attr("class", "h-bar")
+            .style("width", function (d) {
+                return getLucro(d) + "px";
+            })
+            .style("background-color", function(c) {
+                return colorScale(getLucro(c)*0.1);
+            })
+            .select("span")
+                .text(function (d) {
+                    return d.Film;
+                });
+         if(comparator)
+            d3.select("body")
+                .selectAll("div#chart2.h-bar") 
+                .sort(comparator);
+    }
+
+
+    // QUESTAO 4
+    function render4(data, comparator) {
+          console.log(data)
+          d3.select("#chart3").selectAll("div#div5")
+                  .data(data)
+                  .enter()
+                  .append("div")
+                  .attr("id", "div5")
+                  .attr("class", "h-bar")
+                  .attr("style", "background-color: black")
+                  .append("span");
+
+          d3.select("#chart3").selectAll("div#div5.h-bar")
+                  .data(data)
+                  .attr("class", "h-bar")
+                  .style("width", function (d) {
+                      return (d.gross * 0.1) + "px";
+                   })
+              .select("span")
+                  .text(function (d) {
+                      return d.name;
+                  });
+            if(comparator)
+            d3.select("body")
+              .selectAll("div#div5.h-bar")
+              .sort(comparator);
+        }
+
+    var comparePorLucro = function (a, b) { 
+        return getLucro(a) > getLucro(b)?-1:1;
+    };
+
+    var comparePorGenero = function (a, b) {
+          return a.gross > b.gross?-1:1;
+        };
+
+
+    d3.json("movies.json", function(error, json){ 
+        render1(json, comparePorBilheteria);
+        render2(json, comparePorBudGet);
+        render3(json, comparePorLucro);
+
+        var data = {}
+            var genres = []
+
+            for (var i = 0; i < json.length; i++) {
+              var obj = json[i]
+              data[obj["Genre"]] = 0;
+            }
+
+            for (var i = 0; i < json.length; i++) {
+              var obj = json[i]
+              data[obj["Genre"]] += obj["Worldwide_Gross_M"];
+            }
+
+            for (var i in data) {
+              var obj = {
+                "name" : i,
+                "gross" : data[i]
+              };
+
+              genres.push(obj);
+            }
+            render4(genres, comparePorGenero);
+    });
+ 
+</script>
+</body>
+</html>
