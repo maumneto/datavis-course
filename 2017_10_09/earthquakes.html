@@ -11,6 +11,16 @@
             <link  rel="stylesheet" href="css/starter-template.css">
             <link rel="stylesheet" href="css/dc.css">
             <link rel="stylesheet" href="css/styles.css">
+
+            <!-- Style of leafet CSS -->
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+			integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+			crossorigin=""/>
+			<!-- Javascript library leaflet -->
+			<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+			integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+			crossorigin=""></script>
+
             <script src="js/crossfilter.js" charset="utf-8"></script>
             <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
             <script src="js/dc.js" charset="utf-8"></script>
@@ -21,9 +31,13 @@
               
             </style>
         </head>
+
         <body>
             <div class='container-fluid'>
+
                 <h1> Earthquakes in New Zealand </h1>
+                <!-- Javascript library leaflet -->
+            	<div id="mapid"></div>
                 <div id='magnitude-chart'>
                   <h4> Number of Events by Magnitude </h4>
                 </div>
@@ -49,6 +63,13 @@
                 </table>
             </div>
             <script type="text/javascript">
+
+            var map = L.map('mapid').setView([-41.05,172.93], 5);
+			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a>contributors',maxZoom: 17
+			}).addTo(map);
+
+
             // Create the dc.js chart objects & link to divs
             var dataTable = dc.dataTable("#dc-table-graph");
             var magnitudeChart = dc.barChart("#magnitude-chart");
@@ -57,6 +78,7 @@
 
             // load data from a csv file
             d3.csv("earthquakes.csv", function (data) {
+
               // format our data
               var dtgFormat = d3.time.format.utc("%Y-%m-%dT%H:%M:%S");
               data.forEach(function(d){
@@ -65,7 +87,12 @@
                 d.long = +d.longitude;
                 d.mag = +d3.round(+d.magnitude,1);
                 d.depth = +d3.round(+d.depth,0);
+
+                var circle = L.circle([d.lat, d.long], d.depth*100, { color: '#fd8d3c', weight: 2, fillColor: '#fecc5c',fillOpacity: 0.5}).addTo(map).bindPopup("Time: "+ d.dtg + "</br>Magnitude: " + d.mag);
+
               });
+
+
               console.log(data);
 
               var facts = crossfilter(data);
@@ -155,6 +182,8 @@
               .brushOn(false)
               .x(d3.time.scale().domain(d3.extent(data, function(d) { return d.dtg;})))
               .elasticY(true);
+
+
 
 
               dataTable.width(960)
