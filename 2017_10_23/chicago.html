@@ -53,7 +53,7 @@
               .domain(["HOMICIDE", "BURGLARY", "ROBBERY"])
               .range(["#FF0000", "#00FF00" , "#0000FF"]);
             // load data from a csv file
-            d3.csv("chicagoCrimes.csv", function (data) {
+            d3.csv("chicagoCrime.csv", function (data) {
               // format our data
               var dtgFormat = d3.time.format.utc("%m/%d/%Y %H:%M:%S");
               data.forEach(function(d){
