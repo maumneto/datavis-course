@@ -1,7 +1,7 @@
 <!DOCTYPE html>
     <html>
         <head>
-            <title> chicago Data</title>
+            <title> Chicago </title>
              <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
             <!-- Optional theme -->
@@ -25,43 +25,79 @@
             <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
             <script src="js/dc.js" charset="utf-8"></script>
             <meta charset="utf-8">
-            
-            <style type="text/css">
-  
-              
-            </style>
         </head>
 
         <body>
-                <h1> CHICAGO CRIMES </h1>
-                <!-- Javascript library leaflet -->
-            	<div id="mapid"></div>  
-
+            <div class='container-fluid'>
+              <h1> Chicago - Crimes </h1>
+                <div id="mapid"></div>
+              </br>
+              <div id='crimes-total'>
+                  <h4> Número Total de Crimes </h4>
+              </div>
+              </br>
+              <div id='crimes-dia'>
+                <h4> Crimes por Dia </h4>
+              </div>
+            </div>
             <script type="text/javascript">
-
-            var map = L.map('mapid').setView([-41.05,172.93], 5);
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a>contributors',maxZoom: 17
-            }).addTo(map);
-            /*
-            var colorScale = d3.scale.ordinal().domain(["HOMICIDE"])
-
+            var totalCrimesChart  = dc.rowChart('#crimes-total');
+            var crimesPorDiaChart = dc.seriesChart('#crimes-dia');
+            var map = L.map('mapid').setView([41.8405547,-87.8411731], 5);
+                  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                              attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a>contributors',
+                        maxZoom: 17,
+                        minZoom: 9.5
+                             }).addTo(map);
+            var colorScale = d3.scale.ordinal()
+              .domain(["HOMICIDE", "BURGLARY", "ROBBERY"])
+              .range(["#FF0000", "#00FF00" , "#0000FF"]);
             // load data from a csv file
-            d3.csv("chicagoCrime.csv", function (data) {
-
+            d3.csv("crimes.csv", function (data) {
               // format our data
-              var dtgFormat = d3.time.format("%m/%d/%Y %I:%M:%S%p");
+              var dtgFormat = d3.time.format.utc("%m/%d/%Y %H:%M:%S");
               data.forEach(function(d){
-                d.dtg = dtgFormat.parse(d.Date);
+                d.date = dtgFormat.parse(d.Date.substr(0,19));
                 d.lat = +d.Latitude;
                 d.long = +d.Longitude;
                 d.crimetype = d["Primary Type"];
-       
-                var circle = L.circle([d.lat, d.long], 1000, { color: '#fd8d3c', weight: 2, fillColor: '#fecc5c',fillOpacity: 0.5}).addTo(map).bindPopup("Time: " + d.dtg);
-
-              }); 
-
-            });*/
+                var circle = L.circle([d.lat, d.long], 1000, { color: '#000', weight: 1, fillColor: colorScale(d.crimetype), fillOpacity: 0.5}).addTo(map).bindPopup("Time: "+ d.date + "</br>Crime Type: "+ d.crimetype);
+              });
+              var facts = crossfilter(data);
+              var dateDimension = facts.dimension(function (d) {
+                return d.date;
+              });
+              var typeDimension = facts.dimension(function (d) {
+                return d.crimetype;
+              });
+              var typeDimensionCount = typeDimension.group( );
+              var dayDimension = facts.dimension(function (d){
+               return [d3.time.day(d.date), d.crimetype];
+              });
+              var dayDimensionCount = dayDimension.group( );
+              totalCrimesChart.width(1200)
+                .height(200)
+                .margins({top: 10, right: 10, bottom: 20, left:40})
+                .dimension(typeDimension)
+                .group(typeDimensionCount)
+                .transitionDuration(100)
+                .ordinalColors(["#00FF00", "#0000FF" , "#FF0000"])
+                .elasticX(true);
+              crimesPorDiaChart.width(900)
+                .height(400)
+                .transitionDuration(100)
+                .dimension(dayDimension)
+                .group(dayDimensionCount)
+                .keyAccessor(function(d) {return d.key[0];})
+                .seriesAccessor(function(d) { return d.key[1]; })
+                .brushOn(false)
+                .elasticY(true)
+                .legend(dc.legend().x(650).y(10).itemHeight(13).gap(5))
+                .ordinalColors(["#00FF00", "#FF0000", "#0000FF"])
+                .x(d3.time.scale().domain(d3.extent(data, function(d) { return d.date; })));
+              // render
+              dc.renderAll();
+            });
             </script>
 
             <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -69,6 +105,6 @@
             <!-- Include all compiled plugins (below), or include individual files as needed -->
              <!-- Latest compiled and minified JavaScript -->
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-         
+
         </body>
 </html>
