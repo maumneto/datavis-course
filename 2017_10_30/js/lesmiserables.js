@@ -1,4 +1,3 @@
-
 function Network() {
   var allData = [],
       width = 960,
@@ -32,9 +31,9 @@ function Network() {
     var circleRadius, countExtent;
     // initialize circle radius scale
     countExtent = d3.extent(data.nodes, function(d) {
-      return d.playcount;
+      return d.group;
     });
-    circleRadius = d3.scale.sqrt().range([3, 15]).domain(countExtent);
+    circleRadius = d3.scale.sqrt().range([1, 10]).domain(countExtent);
     //First let's randomly dispose data.nodes (x/y) within the the width/height
     // of the visualization and set a fixed radius for now
     data.nodes.forEach(function(n) {
@@ -44,7 +43,7 @@ function Network() {
       n.x = randomnumber = Math.floor(Math.random() * width);
       n.y = randomnumber = Math.floor(Math.random() * height);
       // add radius to the node so we can use it later
-      n.radius = circleRadius(n.playcount);
+      n.radius = circleRadius(n.group);
     });
     // Then we will create a map with
     // id's -> node objects
@@ -65,9 +64,9 @@ function Network() {
   // Mouseover tooltip function
   function showDetails(d, i) {
     var content;
-    content = '<p class="main">' + d.name + '</span></p>';
+    content = '<p class="main">' + d.id + '</span></p>';
     content += '<hr class="tooltip-hr">';
-    content += '<p class="main">' + d.artist + '</span></p>';
+    content += '<p class="main">' + d.group + '</span></p>';
     tooltip.showTooltip(content, d3.event);
 
     return d3.select(this).style("stroke", "black").style("stroke-width", 2.0);
@@ -99,8 +98,9 @@ function Network() {
     return d.y;})
     .attr("r", function(d) {
     return d.radius;})
-    .style("stroke-width", 1.0);
-    // set cx, cy, r attributes and stroke-width style
+    .style("stroke-width", 1.0)
+    .style("fill", "#700");
+
     node.on("mouseover", showDetails).on("mouseout", hideDetails);
   }
 
@@ -173,3 +173,4 @@ function Network() {
   // Final act of Network() function is to return the inner 'network()' function.
   return network;
 }
+
